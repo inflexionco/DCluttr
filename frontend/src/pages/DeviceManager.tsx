@@ -196,6 +196,8 @@ function AddDeviceModal({ volumes, onClose, onAdded }: AddDeviceModalProps) {
     volumes.find((v) => v.device_type === 'external') ?? null
   )
 
+  const isElectron = typeof window !== 'undefined' && !!window.electronAPI
+
   const pickDirectory = async () => {
     if (window.electronAPI?.pickDirectory) {
       const path = await window.electronAPI.pickDirectory()
@@ -303,10 +305,18 @@ function AddDeviceModal({ volumes, onClose, onAdded }: AddDeviceModalProps) {
                     className={inputClass}
                     placeholder="/Users/you"
                   />
-                  <button onClick={pickDirectory} className={iconBtnClass} title="Browse">
+                  <button
+                    onClick={pickDirectory}
+                    disabled={!isElectron}
+                    className={iconBtnClass + (!isElectron ? ' opacity-40 cursor-not-allowed' : '')}
+                    title={isElectron ? 'Browse' : 'Browse only available in the desktop app - type path manually'}
+                  >
                     <FolderOpen size={16} />
                   </button>
                 </div>
+                {!isElectron && (
+                  <p className="text-xs text-slate-500">Running in browser - type the path manually above.</p>
+                )}
               </Field>
             </>
           )}
@@ -436,7 +446,7 @@ export default function DeviceManager() {
   }
 
   const handleDisconnect = async (device: Device) => {
-    if (!confirm(`Remove "${device.name}" from NeatDrive? Indexed data will be preserved.`)) return
+    if (!confirm(`Remove "${device.name}" from DCluttr? Indexed data will be preserved.`)) return
     try {
       await devicesApi.disconnect(device.id)
       removeDevice(device.id)

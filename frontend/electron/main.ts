@@ -1,5 +1,5 @@
 /**
- * Electron main process for NeatDrive.
+ * Electron main process for DCluttr.
  *
  * Responsibilities:
  * - Spawn the Python FastAPI backend as a child process
@@ -24,7 +24,9 @@ const IS_DEV = !app.isPackaged
 let backendProcess: ChildProcess | null = null
 
 function startBackend(): void {
-  const pythonBin = IS_DEV ? 'python' : path.join(process.resourcesPath, 'venv', 'bin', 'python')
+  const pythonBin = IS_DEV
+    ? path.join(__dirname, '..', '..', 'backend', '.venv', 'bin', 'python3')
+    : path.join(process.resourcesPath, 'venv', 'bin', 'python3')
   const scriptPath = IS_DEV
     ? path.join(__dirname, '..', '..', 'backend', 'main.py')
     : path.join(process.resourcesPath, 'backend', 'main.py')
@@ -36,9 +38,9 @@ function startBackend(): void {
       cwd: IS_DEV ? path.join(__dirname, '..', '..') : process.resourcesPath,
       env: {
         ...process.env,
-        NEATDRIVE_HOST: BACKEND_HOST,
-        NEATDRIVE_PORT: String(BACKEND_PORT),
-        NEATDRIVE_RELOAD: IS_DEV ? 'false' : 'false',
+        DCLUTTR_HOST: BACKEND_HOST,
+        DCLUTTR_PORT: String(BACKEND_PORT),
+        DCLUTTR_RELOAD: IS_DEV ? 'false' : 'false',
       },
       stdio: ['ignore', 'pipe', 'pipe'],
     }
