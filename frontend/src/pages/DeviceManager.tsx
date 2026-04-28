@@ -518,23 +518,48 @@ export default function DeviceManager() {
         </div>
       )}
 
-      {/* Detected volumes hint */}
+      {/* Detected volumes — click + to register as a device */}
       {volumes.length > 0 && (
         <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
           <h3 className="text-sm font-medium text-slate-300 mb-3">Detected Volumes</h3>
           <div className="flex flex-wrap gap-2">
-            {volumes.map((vol) => (
-              <div
-                key={vol.path}
-                className="flex items-center gap-2 bg-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300"
-              >
-                <HardDrive size={12} className="text-slate-500" />
-                <span>{vol.name}</span>
-                <span className="text-slate-500">
-                  {formatBytes(vol.free_bytes)} free
-                </span>
-              </div>
-            ))}
+            {volumes.map((vol) => {
+              const alreadyAdded = devices.some(
+                (d) => (d.connection_info as { path?: string } | null)?.path === vol.path
+              )
+              return (
+                <div
+                  key={vol.path}
+                  className="flex items-center gap-2 bg-slate-700 rounded-lg px-3 py-2 text-xs text-slate-300"
+                >
+                  <HardDrive size={12} className="text-slate-500" />
+                  <span>{vol.name}</span>
+                  <span className="text-slate-500">{formatBytes(vol.free_bytes)} free</span>
+                  {alreadyAdded ? (
+                    <span className="text-green-500 ml-1">Added</span>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const device = await devicesApi.connect({
+                            name: vol.name,
+                            type: vol.device_type === 'external' ? 'external' : 'mac',
+                            connection_info: { path: vol.path },
+                          })
+                          addDevice(device)
+                        } catch (err) {
+                          alert((err as Error).message)
+                        }
+                      }}
+                      className="ml-1 p-0.5 rounded text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 transition-colors"
+                      title={`Add ${vol.name} as a device`}
+                    >
+                      <Plus size={12} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

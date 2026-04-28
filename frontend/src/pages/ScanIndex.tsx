@@ -6,17 +6,21 @@
 
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { ScanLine, ChevronDown, ChevronUp } from 'lucide-react'
+import { ScanLine, ChevronDown, ChevronUp, FolderOpen } from 'lucide-react'
 import { useAppStore } from '../store/useAppStore'
 import { ProgressStream } from '../components/ProgressStream'
 
+const isElectron = typeof window !== 'undefined' && !!window.electronAPI
+
 export default function ScanIndex() {
   const location = useLocation()
-  const { devices, fetchDevices, startScan, activeScan, lastScanResults } = useAppStore()
+  const { devices, fetchDevices, startScan } = useAppStore()
 
   const [selectedDevices, setSelectedDevices] = useState<number[]>(
     (location.state as { deviceIds?: number[] })?.deviceIds ?? []
   )
+  // Per-device path overrides: { deviceId: path }
+  const [scanPaths, setScanPaths] = useState<Record<number, string>>({})
   const [fileTypes, setFileTypes] = useState<string[]>([])
   const [scanDepth, setScanDepth] = useState<'shallow' | 'deep'>('deep')
   const [exclusions, setExclusions] = useState('node_modules, .git, __pycache__')
@@ -30,6 +34,15 @@ export default function ScanIndex() {
     setSelectedDevices((prev) =>
       prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
     )
+
+  const setScanPath = (deviceId: number, path: string) =>
+    setScanPaths((prev) => ({ ...prev, [deviceId]: path }))
+
+  const pickScanPath = async (deviceId: number) => {
+    if (!window.electronAPI?.pickDirectory) return
+    const path = await window.electronAPI.pickDirectory()
+    if (path) setScanPath(deviceId, path)
+  }
 
   const toggleFileType = (ft: string) =>
     setFileTypes((prev) => (prev.includes(ft) ? prev.filter((t) => t !== ft) : [...prev, ft]))
@@ -48,6 +61,7 @@ export default function ScanIndex() {
           .split(',')
           .map((s) => s.trim())
           .filter(Boolean),
+        scanPaths: Object.keys(scanPaths).length > 0 ? scanPaths : undefined,
       })
       setJobId(id)
     } catch (err) {
@@ -72,23 +86,44 @@ export default function ScanIndex() {
         {devices.length === 0 ? (
           <p className="text-sm text-slate-500">No devices registered. Add one in Device Manager first.</p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {devices.map((d) => (
-              <label key={d.id} className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="checkbox"
-                  checked={selectedDevices.includes(d.id)}
-                  onChange={() => toggleDevice(d.id)}
-                  className="w-4 h-4 rounded accent-blue-500"
-                />
-                <span className="text-sm text-slate-200 group-hover:text-white transition-colors">
-                  {d.name}
-                </span>
-                <span className="text-xs text-slate-500">({d.type})</span>
-                {!d.is_connected && (
-                  <span className="text-xs text-red-400 ml-auto">offline</span>
+              <div key={d.id} className="flex flex-col gap-2">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={selectedDevices.includes(d.id)}
+                    onChange={() => toggleDevice(d.id)}
+                    className="w-4 h-4 rounded accent-blue-500"
+                  />
+                  <span className="text-sm text-slate-200 group-hover:text-white transition-colors">
+                    {d.name}
+                  </span>
+                  <span className="text-xs text-slate-500">({d.type})</span>
+                  {!d.is_connected && (
+                    <span className="text-xs text-red-400 ml-auto">offline</span>
+                  )}
+                </label>
+                {/* Folder override — only shown when device is selected */}
+                {selectedDevices.includes(d.id) && (
+                  <div className="ml-7 flex gap-2">
+                    <input
+                      value={scanPaths[d.id] ?? ''}
+                      onChange={(e) => setScanPath(d.id, e.target.value)}
+                      placeholder={`Folder to scan (default: device root)`}
+                      className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      onClick={() => pickScanPath(d.id)}
+                      disabled={!isElectron}
+                      title={isElectron ? 'Browse' : 'Type path manually'}
+                      className={`shrink-0 p-1.5 bg-slate-700 border border-slate-600 rounded-lg text-slate-400 transition-colors ${isElectron ? 'hover:text-slate-200 hover:bg-slate-600' : 'opacity-40 cursor-not-allowed'}`}
+                    >
+                      <FolderOpen size={14} />
+                    </button>
+                  </div>
                 )}
-              </label>
+              </div>
             ))}
           </div>
         )}
