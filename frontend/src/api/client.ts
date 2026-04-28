@@ -50,6 +50,7 @@ export interface ScanStartPayload {
   file_types?: string[] | null
   scan_depth?: 'shallow' | 'deep'
   exclusion_patterns?: string[] | null
+  scan_paths?: Record<number, string> | null
 }
 
 export interface ScanJob {

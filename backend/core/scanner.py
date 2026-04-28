@@ -129,6 +129,7 @@ class FileScanner:
         job: ScanJob,
         devices: list[Device],
         progress_callback: Optional[ProgressCallback] = None,
+        scan_paths: Optional[dict[int, str]] = None,
     ) -> ScanProgress:
         """
         Execute a scan job end-to-end.
@@ -166,7 +167,11 @@ class FileScanner:
                     continue
 
                 conn_info = json.loads(device.connection_info) if device.connection_info else {}
-                root_path = Path(conn_info.get("path", "/"))
+                # Use caller-supplied path override if provided, else device root
+                if scan_paths and device_id in scan_paths:
+                    root_path = Path(scan_paths[device_id])
+                else:
+                    root_path = Path(conn_info.get("path", "/"))
 
                 if not root_path.exists():
                     continue

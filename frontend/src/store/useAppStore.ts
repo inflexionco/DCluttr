@@ -65,6 +65,7 @@ interface ScanSlice {
     fileTypes?: string[]
     scanDepth?: 'shallow' | 'deep'
     exclusionPatterns?: string[]
+    scanPaths?: Record<number, string>
   }) => Promise<number>  // returns jobId
   updateScanProgress: (event: ScanProgressEvent) => void
   closeScanSocket: () => void
@@ -165,6 +166,7 @@ export const useAppStore = create<AppStore>()(
             file_types: options.fileTypes ?? null,
             scan_depth: options.scanDepth ?? 'deep',
             exclusion_patterns: options.exclusionPatterns ?? null,
+            scan_paths: options.scanPaths ?? null,
           })
 
           const initialProgress: ScanProgressEvent = {

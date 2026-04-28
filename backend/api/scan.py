@@ -40,6 +40,8 @@ class ScanStartRequest(BaseModel):
     file_types: Optional[list[str]] = None  # images | videos | documents | audio
     scan_depth: str = Field("deep", pattern="^(shallow|deep)$")
     exclusion_patterns: Optional[list[str]] = None
+    # Optional per-device path overrides: {device_id: path}
+    scan_paths: Optional[dict[int, str]] = None
 
 
 class ScanStartResponse(BaseModel):
@@ -118,13 +120,22 @@ async def start_scan(
     _active_progress[job_id] = ScanProgress(job_id=job_id, status="pending")
     _progress_events[job_id] = asyncio.Event()
 
+    # scan_paths keys are ints but JSON round-trips them as strings — normalise here
+    scan_paths: dict[int, str] | None = None
+    if body.scan_paths:
+        scan_paths = {int(k): v for k, v in body.scan_paths.items()}
+
     # Launch background task — uses a fresh DB session so it doesn't conflict
-    asyncio.create_task(_run_scan_task(job_id, body.device_ids))
+    asyncio.create_task(_run_scan_task(job_id, body.device_ids, scan_paths))
 
     return ScanStartResponse(job_id=job_id, status="pending")
 
 
-async def _run_scan_task(job_id: int, device_ids: list[int]) -> None:
+async def _run_scan_task(
+    job_id: int,
+    device_ids: list[int],
+    scan_paths: dict[int, str] | None = None,
+) -> None:
     """Background task: runs the scan job with its own DB session."""
     from backend.db.database import AsyncSessionLocal  # avoid circular import
 
@@ -140,7 +151,7 @@ async def _run_scan_task(job_id: int, device_ids: list[int]) -> None:
 
             scanner = FileScanner(db)
             callback = _make_progress_callback(job_id)
-            await scanner.run_scan_job(job, devices, progress_callback=callback)
+            await scanner.run_scan_job(job, devices, progress_callback=callback, scan_paths=scan_paths)
             await db.commit()
         except Exception as exc:
             logger.exception("Scan task %d failed: %s", job_id, exc)
