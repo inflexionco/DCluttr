@@ -11,15 +11,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from backend.db.models import Base
 
 # Store DB in user's app data directory
-APP_DATA_DIR = Path(os.environ.get("NEATDRIVE_DATA_DIR", Path.home() / ".neatdrive"))
+APP_DATA_DIR = Path(os.environ.get("DCLUTTR_DATA_DIR", Path.home() / ".dcluttr"))
 APP_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-DB_PATH = APP_DATA_DIR / "neatdrive.db"
+DB_PATH = APP_DATA_DIR / "dcluttr.db"
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
 
 engine = create_async_engine(
     DATABASE_URL,
-    echo=bool(os.environ.get("NEATDRIVE_DB_ECHO", False)),
+    echo=bool(os.environ.get("DCLUTTR_DB_ECHO", False)),
     connect_args={"check_same_thread": False},
 )
 

@@ -1,7 +1,8 @@
 {
-  "name": "neatdrive",
+  "name": "dcluttr",
   "version": "0.1.0",
-  "description": "NeatDrive - Cross-device Digital Document Management and Declutter Tool",
+  "type": "module",
+  "description": "DCluttr - Cross-device Digital Document Management and Declutter Tool",
   "main": "dist/electron/main.js",
   "scripts": {
     "dev": "concurrently \"pnpm dev:vite\" \"pnpm dev:electron\"",
@@ -58,8 +59,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.neatdrive.app",
-    "productName": "NeatDrive",
+    "appId": "com.dcluttr.app",
+    "productName": "DCluttr",
     "directories": {
       "output": "release"
     },

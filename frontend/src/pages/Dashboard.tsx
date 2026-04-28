@@ -1,5 +1,5 @@
 /**
- * Dashboard page — NeatDrive home screen.
+ * Dashboard page — DCluttr home screen.
  *
  * Shows:
  * - Summary stat cards (total files, duplicates, space recoverable, devices)

@@ -1,5 +1,5 @@
 """
-Async filesystem scanner for NeatDrive.
+Async filesystem scanner for DCluttr.
 Walks local filesystem directories, emits progress events via callback,
 and persists file records to the database.
 """

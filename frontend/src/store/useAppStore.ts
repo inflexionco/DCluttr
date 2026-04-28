@@ -1,5 +1,5 @@
 /**
- * Zustand global state store for NeatDrive.
+ * Zustand global state store for DCluttr.
  *
  * Organised into slice-like sub-stores:
  *   deviceStore  — connected devices + connection status
@@ -281,6 +281,6 @@ export const useAppStore = create<AppStore>()(
           notifications: state.notifications.filter((n) => n.id !== id),
         })),
     }),
-    { name: 'NeatDriveStore' }
+    { name: 'DCluttrStore' }
   )
 )

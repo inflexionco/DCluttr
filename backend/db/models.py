@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models for NeatDrive.
+SQLAlchemy ORM models for DCluttr.
 All tables use integer primary keys with SQLite autoincrement.
 """
 

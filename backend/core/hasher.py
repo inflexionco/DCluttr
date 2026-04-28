@@ -1,5 +1,5 @@
 """
-SHA-256 hashing engine for NeatDrive Phase 1.
+SHA-256 hashing engine for DCluttr Phase 1.
 Computes file hashes with streaming to handle large files efficiently,
 then groups duplicate files by identical hash value.
 """

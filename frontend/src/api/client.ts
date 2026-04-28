@@ -1,5 +1,5 @@
 /**
- * Axios API client for NeatDrive.
+ * Axios API client for DCluttr.
  * Resolves the backend base URL from the Electron preload bridge at runtime,
  * falling back to localhost for browser-based development.
  */

@@ -58,7 +58,7 @@ function Sidebar() {
       {/* Logo */}
       <div className="h-12 flex items-center px-4 border-b border-slate-800 gap-2 shrink-0">
         {!sidebarCollapsed && (
-          <span className="text-sm font-bold text-slate-100 tracking-tight">NeatDrive</span>
+          <span className="text-sm font-bold text-slate-100 tracking-tight">DCluttr</span>
         )}
       </div>
 

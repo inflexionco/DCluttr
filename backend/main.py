@@ -1,5 +1,5 @@
 """
-NeatDrive FastAPI application entry point.
+DCluttr FastAPI application entry point.
 Starts the async SQLite database, registers all API routers,
 and serves the WebSocket + REST endpoints on localhost.
 """
@@ -20,21 +20,21 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
-logger = logging.getLogger("neatdrive")
+logger = logging.getLogger("dcluttr")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize the database on startup."""
-    logger.info("Initializing NeatDrive database …")
+    logger.info("Initializing DCluttr database …")
     await init_db()
-    logger.info("Database ready. NeatDrive backend is up.")
+    logger.info("Database ready. DCluttr backend is up.")
     yield
-    logger.info("NeatDrive backend shutting down.")
+    logger.info("DCluttr backend shutting down.")
 
 
 app = FastAPI(
-    title="NeatDrive API",
+    title="DCluttr API",
     description="Cross-device digital document management and declutter backend",
     version="0.1.0",
     lifespan=lifespan,
@@ -61,7 +61,7 @@ app.include_router(scan_router)
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "service": "neatdrive-backend"}
+    return {"status": "ok", "service": "dcluttr-backend"}
 
 
 @app.get("/api/stats")
@@ -124,9 +124,9 @@ async def global_stats():
 
 
 if __name__ == "__main__":
-    host = os.environ.get("NEATDRIVE_HOST", "127.0.0.1")
-    port = int(os.environ.get("NEATDRIVE_PORT", "8000"))
-    reload = os.environ.get("NEATDRIVE_RELOAD", "false").lower() == "true"
+    host = os.environ.get("DCLUTTR_HOST", "127.0.0.1")
+    port = int(os.environ.get("DCLUTTR_PORT", "8000"))
+    reload = os.environ.get("DCLUTTR_RELOAD", "false").lower() == "true"
 
     uvicorn.run(
         "backend.main:app",
