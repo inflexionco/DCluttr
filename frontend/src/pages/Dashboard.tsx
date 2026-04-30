@@ -62,7 +62,7 @@ function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{
       style={{ borderColor: color }}
       className="bg-slate-900 border rounded-lg px-3 py-2 shadow-xl"
     >
-      <p style={{ color }} className="text-xs font-semibold mb-0.5">{name}</p>
+      <p className="text-xs font-semibold mb-0.5 text-white">{name}</p>
       <p className="text-sm font-bold text-white">{formatBytes(value)}</p>
     </div>
   )
