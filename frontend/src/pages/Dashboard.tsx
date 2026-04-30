@@ -52,6 +52,22 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: '#6b7280',     // gray-500
 }
 
+// ── Chart tooltip ─────────────────────────────────────────────────────────
+
+function ChartTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }> }) {
+  if (!active || !payload?.length) return null
+  const { name, value, payload: { color } } = payload[0]
+  return (
+    <div
+      style={{ borderColor: color }}
+      className="bg-slate-900 border rounded-lg px-3 py-2 shadow-xl"
+    >
+      <p style={{ color }} className="text-xs font-semibold mb-0.5">{name}</p>
+      <p className="text-sm font-bold text-white">{formatBytes(value)}</p>
+    </div>
+  )
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────
 
 interface StatCardProps {
@@ -204,15 +220,7 @@ export default function Dashboard() {
                     <Cell key={idx} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(value: number) => formatBytes(value)}
-                  contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: '8px',
-                    color: '#f1f5f9',
-                  }}
-                />
+                <Tooltip content={<ChartTooltip />} />
                 <Legend
                   iconType="circle"
                   iconSize={8}
