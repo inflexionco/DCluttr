@@ -3,7 +3,7 @@
  *
  * Shows:
  * - Summary stat cards (total files, duplicates, space recoverable, devices)
- * - Storage breakdown donut chart per category
+ * - Storage breakdown donut chart per category with center label + legend percentages
  * - Recent scan jobs feed
  * - Quick action buttons
  */
@@ -19,6 +19,8 @@ import {
   FolderSearch,
   Tag,
   RefreshCw,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react'
 import {
   PieChart,
@@ -26,7 +28,6 @@ import {
   Cell,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts'
 import { useAppStore } from '../store/useAppStore'
 
@@ -76,15 +77,28 @@ interface StatCardProps {
   value: string
   subtext?: string
   accent?: string
+  trend?: { direction: 'up' | 'down'; label: string }
 }
 
-function StatCard({ icon, label, value, subtext, accent = 'text-blue-500' }: StatCardProps) {
+function StatCard({ icon, label, value, subtext, accent = 'text-blue-500', trend }: StatCardProps) {
   return (
-    <div className="bg-slate-800 rounded-xl p-5 flex items-start gap-4 border border-slate-700">
-      <div className={`p-2 rounded-lg bg-slate-700 ${accent}`}>{icon}</div>
+    <div className="bg-slate-800 rounded-xl p-5 flex flex-col gap-3 border border-slate-700">
+      <div className="flex items-start justify-between">
+        <div className={`p-2 rounded-lg bg-slate-700 ${accent}`}>{icon}</div>
+        {trend && (
+          <span className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
+            trend.direction === 'up'
+              ? 'text-green-400 bg-green-900/20'
+              : 'text-red-400 bg-red-900/20'
+          }`}>
+            {trend.direction === 'up' ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+            {trend.label}
+          </span>
+        )}
+      </div>
       <div>
         <p className="text-sm text-slate-400">{label}</p>
-        <p className="text-2xl font-semibold text-slate-100 mt-0.5">{value}</p>
+        <p className="text-2xl font-bold text-slate-100 mt-0.5 tracking-tight">{value}</p>
         {subtext && <p className="text-xs text-slate-500 mt-1">{subtext}</p>}
       </div>
     </div>
@@ -121,7 +135,7 @@ function QuickAction({ icon, label, description, onClick, variant = 'secondary' 
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const { globalStats, scanJobs, devicesLoading, fetchStats, fetchScanJobs, fetchDevices, devices } =
+  const { globalStats, scanJobs, lastScanResults, devicesLoading, fetchStats, fetchScanJobs, fetchDevices, devices } =
     useAppStore()
 
   useEffect(() => {
@@ -132,19 +146,24 @@ export default function Dashboard() {
 
   // Build donut chart data from last scan results
   const lastCompletedJob = scanJobs.find((j) => j.status === 'done')
+
+  // Use lastScanResults by_type if available, else placeholder equal slices
+  const rawByType = lastScanResults?.by_type
   const chartData = globalStats
     ? Object.entries({
-        images: 0,
-        videos: 0,
-        documents: 0,
-        audio: 0,
-        other: 0,
-      }).map(([key]) => ({
+        images: rawByType?.images ?? 1,
+        videos: rawByType?.videos ?? 1,
+        documents: rawByType?.documents ?? 1,
+        audio: rawByType?.audio ?? 1,
+        other: rawByType?.other ?? 1,
+      }).map(([key, val]) => ({
         name: key.charAt(0).toUpperCase() + key.slice(1),
-        value: 1, // placeholder — real per-type stats come from scan results
+        value: val,
         color: CATEGORY_COLORS[key],
       })).filter((d) => d.value > 0)
     : []
+
+  const chartTotal = chartData.reduce((sum, d) => sum + d.value, 0)
 
   const stats = globalStats
 
@@ -175,6 +194,7 @@ export default function Dashboard() {
           value={formatNumber(stats?.total_files ?? 0)}
           subtext={formatBytes(stats?.total_size_bytes ?? 0) + ' total'}
           accent="text-blue-400"
+          trend={stats?.total_files ? { direction: 'up', label: 'synced' } : undefined}
         />
         <StatCard
           icon={<Copy size={20} />}
@@ -189,6 +209,7 @@ export default function Dashboard() {
           value={formatBytes(stats?.space_recoverable_bytes ?? 0)}
           subtext="by resolving duplicates"
           accent="text-red-400"
+          trend={stats?.space_recoverable_bytes ? { direction: 'down', label: 'wasted' } : undefined}
         />
         <StatCard
           icon={<Plug size={20} />}
@@ -205,31 +226,54 @@ export default function Dashboard() {
         <div className="bg-slate-800 rounded-xl p-5 border border-slate-700">
           <h2 className="text-base font-semibold text-slate-200 mb-4">Storage Breakdown</h2>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {chartData.map((entry, idx) => (
-                    <Cell key={idx} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip content={<ChartTooltip />} />
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(value) => (
-                    <span className="text-slate-300 text-xs">{value}</span>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <div className="flex items-center gap-6">
+              {/* Donut with center label */}
+              <div className="relative shrink-0" style={{ width: 180, height: 180 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                      strokeWidth={0}
+                    >
+                      {chartData.map((entry, idx) => (
+                        <Cell key={idx} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<ChartTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Center label */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <p className="text-lg font-bold text-slate-100 leading-tight">
+                    {stats?.total_size_bytes ? formatBytes(stats.total_size_bytes) : '—'}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5">Total</p>
+                </div>
+              </div>
+
+              {/* Legend with percentages */}
+              <div className="flex flex-col gap-2 flex-1">
+                {chartData.map((entry) => {
+                  const pct = chartTotal > 0 ? Math.round((entry.value / chartTotal) * 100) : 0
+                  return (
+                    <div key={entry.name} className="flex items-center gap-2">
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: entry.color }}
+                      />
+                      <span className="text-xs text-slate-300 flex-1">{entry.name}</span>
+                      <span className="text-xs font-semibold text-slate-200">{pct}%</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-[220px] text-slate-500">
               <HardDrive size={40} className="mb-3 opacity-30" />

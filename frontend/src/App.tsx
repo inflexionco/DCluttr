@@ -19,6 +19,8 @@ import { useAppStore } from './store/useAppStore'
 import Dashboard from './pages/Dashboard'
 import DeviceManager from './pages/DeviceManager'
 import ScanIndex from './pages/ScanIndex'
+import FileTransfer from './pages/FileTransfer'
+import SmartRename from './pages/SmartRename'
 
 // ── Lazy stubs for Phase 2+ pages ─────────────────────────────────────────
 
@@ -107,8 +109,8 @@ export default function App() {
             <Route path="/devices" element={<DeviceManager />} />
             <Route path="/scan" element={<ScanIndex />} />
             <Route path="/duplicates" element={<Placeholder name="Duplicate Review" />} />
-            <Route path="/rename" element={<Placeholder name="Smart Rename" />} />
-            <Route path="/transfer" element={<Placeholder name="File Transfer" />} />
+            <Route path="/rename" element={<SmartRename />} />
+            <Route path="/transfer" element={<FileTransfer />} />
             <Route path="/library" element={<Placeholder name="DMS Library" />} />
             <Route path="/settings" element={<Placeholder name="Settings" />} />
           </Routes>
